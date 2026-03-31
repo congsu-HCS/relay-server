@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Điều khiển Relay</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- TIÊU ĐỀ -->
+    <div class="header">
+        HỆ THỐNG ĐIỀU KHIỂN RELAY
+    </div>
+
+    <!-- KHUNG -->
+    <div class="panel">
+        <div class="grid">
+
+            <!-- Hàng 1 -->
+            <div class="item"><button class="btn" data-id="56">56</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="16">16</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="15">15</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="14">14</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="13">13</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="12">12</button><input class="count" type="number" value="1" min="1" max="100"></div>
+
+            <!-- Hàng 2 -->
+            <div></div>
+            <div class="item"><button class="btn" data-id="26">26</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="25">25</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="24">24</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="23">23</button><input class="count" type="number" value="1" min="1" max="100"></div>
+
+            <!-- Hàng 3 -->
+            <div></div><div></div>
+            <div class="item"><button class="btn" data-id="36">36</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="35">35</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="34">34</button><input class="count" type="number" value="1" min="1" max="100"></div>
+
+            <!-- Hàng 4 -->
+            <div></div><div></div><div></div>
+            <div class="item"><button class="btn" data-id="46">46</button><input class="count" type="number" value="1" min="1" max="100"></div>
+            <div class="item"><button class="btn" data-id="45">45</button><input class="count" type="number" value="1" min="1" max="100"></div>
+
+        </div>
+    </div>
+
+    <!-- THANH TRẠNG THÁI KẾT NỐI -->
+    <div class="status-bar" id="statusBar">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-text" id="statusText">Đang kiểm tra kết nối...</span>
+        <span class="status-time" id="statusTime"></span>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
