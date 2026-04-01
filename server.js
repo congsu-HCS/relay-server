@@ -89,8 +89,28 @@ app.post("/api/login", async (req, res) => {
 });
 
 // ===== PROTECTED ROUTES =====
-app.get("/app",   authMiddleware,  (req, res) => res.sendFile(__dirname + "/index.html"));
-app.get("/admin", adminMiddleware, (req, res) => res.sendFile(__dirname + "/admin.html"));
+app.get("/app", (req, res) => {
+  const user = verifyToken(req.headers["x-token"] || req.query.token);
+
+  if (!user) {
+    return res.redirect("/login"); // 👉 chưa login thì về login
+  }
+
+  res.sendFile(__dirname + "/index.html");
+});
+app.get("/admin", (req, res) => {
+  const user = verifyToken(req.headers["x-token"] || req.query.token);
+
+  if (!user) {
+    return res.redirect("/login"); // 👉 chưa login
+  }
+
+  if (user.role !== "admin") {
+    return res.redirect("/app"); // 👉 không phải admin thì về app
+  }
+
+  res.sendFile(__dirname + "/admin.html");
+});
 
 app.post("/relay", authMiddleware, (req, res) => {
   const { relay, state } = req.body;
