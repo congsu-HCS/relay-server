@@ -90,12 +90,9 @@ buttons.forEach(btn => {
             console.log("Relay:", id, state);
 
             fetch(SERVER_URL + "/relay", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "x-token": localStorage.getItem("token")
-            },
-            body: JSON.stringify({ relay: id, state: state })
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ relay: id, state: state })
             })
             .then(res => res.json())
             .then(data => {

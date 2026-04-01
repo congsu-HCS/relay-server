@@ -89,8 +89,8 @@ app.post("/api/login", async (req, res) => {
 });
 
 // ===== PROTECTED ROUTES =====
-app.get("/app", (req, res) => res.sendFile(__dirname + "/index.html"));
-app.get("/admin", (req, res) => res.sendFile(__dirname + "/admin.html"));
+app.get("/app",   authMiddleware,  (req, res) => res.sendFile(__dirname + "/index.html"));
+app.get("/admin", adminMiddleware, (req, res) => res.sendFile(__dirname + "/admin.html"));
 
 app.post("/relay", authMiddleware, (req, res) => {
   const { relay, state } = req.body;
