@@ -84,7 +84,7 @@ async function doLogin() {
       localStorage.setItem("token",    data.token);
       localStorage.setItem("username", data.username);
       localStorage.setItem("role",     data.role);
-      window.location.href = "/app";
+      window.location.href = "/app?token=" + data.token;
     } else {
       errMsg.textContent = data.message || "Sai thông tin đăng nhập!";
       errMsg.style.display = "block";
