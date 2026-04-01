@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quản lý User</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #cfd9df, #e2ebf0);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px 15px;
+}
+.container { width: 500px; }
+
+.header {
+  background: #2c3e50;
+  color: white;
+  padding: 14px 20px;
+  border-radius: 15px 15px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.back-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.back-btn:hover { background: #2980b9; }
+
+.panel {
+  background: white;
+  padding: 25px;
+  border-radius: 0 0 15px 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+h3 { color: #2c3e50; margin-bottom: 15px; font-size: 15px; }
+
+/* Form thêm user */
+.add-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 25px;
+}
+.add-form input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+.add-form input:focus { border-color: #3498db; }
+.add-form button {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.add-form button:hover { background: #219a52; }
+
+/* Danh sách user */
+.user-list { display: flex; flex-direction: column; gap: 10px; }
+
+.user-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #eee;
+}
+
+.user-name { font-weight: bold; color: #2c3e50; }
+.user-role {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: #3498db;
+  color: white;
+  margin-left: 8px;
+}
+.user-role.admin { background: #e74c3c; }
+
+.del-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.del-btn:hover { background: #c0392b; }
+
+.msg {
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 15px;
+  display: none;
+  text-align: center;
+}
+.msg.ok    { background: #d4edda; color: #27ae60; display: block; }
+.msg.error { background: #fde8e8; color: #e74c3c; display: block; }
+
+.empty { color: #999; text-align: center; padding: 20px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    👥 Quản lý User
+    <button class="back-btn" onclick="window.location.href='/app'">← Điều khiển</button>
+  </div>
+  <div class="panel">
+
+    <!-- Thêm user -->
+    <h3>➕ Thêm user mới</h3>
+    <div class="msg" id="msg"></div>
+    <div class="add-form">
+      <input type="text"     id="newUser" placeholder="Tên đăng nhập">
+      <input type="password" id="newPass" placeholder="Mật khẩu">
+      <button onclick="addUser()">Thêm</button>
+    </div>
+
+    <!-- Danh sách -->
+    <h3>📋 Danh sách user</h3>
+    <div class="user-list" id="userList">
+      <div class="empty">Đang tải...</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+const role  = localStorage.getItem("role");
+
+// Chỉ admin mới vào được
+if (!token || role !== "admin") window.location.href = "/login";
+
+function showMsg(text, type) {
+  const el = document.getElementById("msg");
+  el.textContent = text;
+  el.className = "msg " + type;
+  setTimeout(() => el.className = "msg", 3000);
+}
+
+async function loadUsers() {
+  const res  = await fetch("/api/users", { headers: { "x-token": token } });
+  const data = await res.json();
+  const list = document.getElementById("userList");
+
+  if (!data.ok || data.users.length === 0) {
+    list.innerHTML = '<div class="empty">Chưa có user nào</div>';
+    return;
+  }
+
+  // Thêm admin vào đầu (cố định)
+  const allUsers = [{ username: "admin", role: "admin" }, ...data.users];
+
+  list.innerHTML = allUsers.map(u => `
+    <div class="user-item">
+      <div>
+        <span class="user-name">👤 ${u.username}</span>
+        <span class="user-role ${u.role}">${u.role}</span>
+      </div>
+      ${u.role !== "admin"
+        ? `<button class="del-btn" onclick="deleteUser('${u.username}')">Xóa</button>`
+        : `<span style="font-size:12px;color:#999;">Không thể xóa</span>`
+      }
+    </div>
+  `).join("");
+}
+
+async function addUser() {
+  const username = document.getElementById("newUser").value.trim();
+  const password = document.getElementById("newPass").value.trim();
+  if (!username || !password) { showMsg("Vui lòng nhập đủ thông tin!", "error"); return; }
+
+  const res  = await fetch("/api/users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-token": token },
+    body: JSON.stringify({ username, password })
+  });
+  const data = await res.json();
+
+  if (data.ok) {
+    showMsg("✅ Đã thêm user: " + username, "ok");
+    document.getElementById("newUser").value = "";
+    document.getElementById("newPass").value = "";
+    loadUsers();
+  } else {
+    showMsg("❌ " + data.message, "error");
+  }
+}
+
+async function deleteUser(username) {
+  if (!confirm("Xóa user: " + username + "?")) return;
+  const res  = await fetch("/api/users/" + username, {
+    method: "DELETE",
+    headers: { "x-token": token }
+  });
+  const data = await res.json();
+  if (data.ok) { showMsg("✅ Đã xóa: " + username, "ok"); loadUsers(); }
+  else         { showMsg("❌ " + data.message, "error"); }
+}
+
+loadUsers();
+</script>
+</body>
+</html>

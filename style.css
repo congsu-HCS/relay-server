@@ -1,41 +1,154 @@
 body {
-  margin: 0;
-  font-family: Arial;
-  background: linear-gradient(135deg, #cfd9df, #e2ebf0);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+    margin: 0;
+    font-family: Arial;
+    background: linear-gradient(135deg, #cfd9df, #e2ebf0);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-.container { width: 600px; }
+/* Khung tổng */
+.container {
+    width: 600px;
+}
 
 /* Header */
 .header {
-  background: #2c3e50;
-  color: white;
-  padding: 12px 18px;
-  font-size: 18px;
-  font-weight: bold;
-  border-radius: 15px 15px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    background: #2c3e50;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 15px 15px 0 0;
 }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* Panel */
+.panel {
+    background: white;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-.user-info {
-  font-size: 13px;
-  color: #bdc3c7;
+/* Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(6, 80px);
+    gap: 20px;
 }
 
-.logout-btn {
-  background: #e74c3c;
+/* Item */
+.item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Button */
+.btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    font-size: 18px;
+    color: white;
+    background: red;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.btn.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+.btn.active {
+    background: green;
+}
+
+.btn:active {
+    transform: scale(0.9);
+}
+
+/* Input */
+.count {
+    margin-top: 5px;
+    width: 50px;
+    text-align: center;
+}
+
+/* ===== THANH TRẠNG THÁI KẾT NỐI ===== */
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: #1a252f;
+    border-radius: 0 0 15px 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    transition: background 0.4s;
+}
+
+/* Chấm tròn nhấp nháy */
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #888;
+    transition: background 0.4s;
+}
+
+/* Trạng thái: đang kiểm tra */
+.status-bar.checking .status-dot {
+    background: #f39c12;
+    animation: blink 0.8s infinite;
+}
+
+/* Trạng thái: kết nối OK */
+.status-bar.connected .status-dot {
+    background: #2ecc71;
+    animation: pulse-green 1.5s infinite;
+}
+
+/* Trạng thái: mất kết nối */
+.status-bar.disconnected .status-dot {
+    background: #e74c3c;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.2; }
+}
+
+@keyframes pulse-green {
+    0%   { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6); }
+    70%  { box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+}
+
+/* Chữ trạng thái */
+.status-text {
+    color: #ecf0f1;
+    font-size: 13px;
+    font-weight: bold;
+    flex: 1;
+    transition: color 0.4s;
+}
+
+.status-bar.connected  .status-text { color: #2ecc71; }
+.status-bar.disconnected .status-text { color: #e74c3c; }
+.status-bar.checking .status-text { color: #f39c12; }
+
+/* Thời gian cập nhật */
+.status-time {
+    color: #7f8c8d;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.admin-btn {
+  background: #3498db;
   color: white;
   border: none;
   padding: 6px 12px;
@@ -44,88 +157,4 @@ body {
   cursor: pointer;
   transition: background 0.2s;
 }
-.logout-btn:hover { background: #c0392b; }
-
-/* Panel */
-.panel {
-  background: white;
-  padding: 25px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
-
-/* Grid */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(6, 80px);
-  gap: 20px;
-}
-
-.item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Button */
-.btn {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  border: none;
-  font-size: 18px;
-  color: white;
-  background: red;
-  cursor: pointer;
-  transition: 0.3s;
-}
-.btn.disabled { opacity: 0.4; pointer-events: none; }
-.btn.active   { background: green; }
-.btn:active   { transform: scale(0.9); }
-
-.count {
-  margin-top: 5px;
-  width: 50px;
-  text-align: center;
-}
-
-/* Status bar */
-.status-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  background: #1a252f;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  transition: background 0.4s;
-}
-
-.status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: #888;
-  transition: background 0.4s;
-}
-
-.status-bar.checking    .status-dot { background: #f39c12; animation: blink 0.8s infinite; }
-.status-bar.connected   .status-dot { background: #2ecc71; animation: pulse-green 1.5s infinite; }
-.status-bar.disconnected .status-dot { background: #e74c3c; animation: blink 1s infinite; }
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.2; }
-}
-@keyframes pulse-green {
-  0%   { box-shadow: 0 0 0 0 rgba(46,204,113,0.6); }
-  70%  { box-shadow: 0 0 0 8px rgba(46,204,113,0); }
-  100% { box-shadow: 0 0 0 0 rgba(46,204,113,0); }
-}
-
-.status-text { color: #ecf0f1; font-size: 13px; font-weight: bold; flex: 1; }
-.status-bar.connected   .status-text { color: #2ecc71; }
-.status-bar.disconnected .status-text { color: #e74c3c; }
-.status-bar.checking    .status-text { color: #f39c12; }
-
-.status-time { color: #7f8c8d; font-size: 11px; white-space: nowrap; }
+.admin-btn:hover { background: #2980b9; }

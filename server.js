@@ -3,7 +3,7 @@ const express    = require("express");
 const http       = require("http");
 const WebSocket  = require("ws");
 const crypto     = require("crypto");
-const { findUser } = require("./user");
+const { findUser, getSubUsers, addUser, deleteUser } = require("./user");
 
 const app        = express();
 const httpServer = http.createServer(app);
@@ -39,9 +39,16 @@ function verifyToken(token) {
 
 // ===== MIDDLEWARE =====
 function authMiddleware(req, res, next) {
-  const token = req.headers["x-token"] || req.query.token;
-  const user  = verifyToken(token);
+  const user = verifyToken(req.headers["x-token"] || req.query.token);
   if (!user) return res.status(401).json({ ok: false, message: "Chua dang nhap" });
+  req.user = user;
+  next();
+}
+
+function adminMiddleware(req, res, next) {
+  const user = verifyToken(req.headers["x-token"] || req.query.token);
+  if (!user)                 return res.status(401).json({ ok: false, message: "Chua dang nhap" });
+  if (user.role !== "admin") return res.status(403).json({ ok: false, message: "Khong co quyen" });
   req.user = user;
   next();
 }
@@ -65,22 +72,25 @@ function broadcast(data) {
 }
 
 // ===== PUBLIC ROUTES =====
+app.get("/",      (req, res) => res.redirect("/login"));
 app.get("/login", (req, res) => res.sendFile(__dirname + "/login.html"));
+app.get("/ping",  (req, res) => res.json({ ok: true }));
 
-app.post("/api/login", (req, res) => {
-  const { username, password } = req.body;
-  const user = findUser(username, password);
-  if (!user) return res.status(401).json({ ok: false, message: "Sai tai khoan hoac mat khau" });
-  const token = createToken(user);
-  res.json({ ok: true, token, username: user.username, role: user.role });
+app.post("/api/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await findUser(username, password);
+    if (!user) return res.status(401).json({ ok: false, message: "Sai tai khoan hoac mat khau" });
+    const token = createToken(user);
+    res.json({ ok: true, token, username: user.username, role: user.role });
+  } catch (e) {
+    res.status(500).json({ ok: false, message: "Loi server" });
+  }
 });
 
-app.get("/ping", (req, res) => res.json({ ok: true }));
-
 // ===== PROTECTED ROUTES =====
-app.get("/", (req, res) => res.redirect("/login"));
-
-app.get("/app", (req, res) => res.sendFile(__dirname + "/index.html"));
+app.get("/app",   authMiddleware,  (req, res) => res.sendFile(__dirname + "/index.html"));
+app.get("/admin", adminMiddleware, (req, res) => res.sendFile(__dirname + "/admin.html"));
 
 app.post("/relay", authMiddleware, (req, res) => {
   const { relay, state } = req.body;
@@ -95,6 +105,36 @@ app.get("/relays", authMiddleware, (req, res) => res.json(relayState));
 app.post("/api/logout", authMiddleware, (req, res) => {
   tokens.delete(req.headers["x-token"]);
   res.json({ ok: true });
+});
+
+// ===== ADMIN: QUẢN LÝ USER =====
+app.get("/api/users", adminMiddleware, async (req, res) => {
+  try {
+    const users = await getSubUsers();
+    res.json({ ok: true, users });
+  } catch (e) {
+    res.status(500).json({ ok: false, message: "Loi doc danh sach user" });
+  }
+});
+
+app.post("/api/users", adminMiddleware, async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.json({ ok: false, message: "Thieu thong tin" });
+    const result = await addUser(username, password);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, message: "Loi them user" });
+  }
+});
+
+app.delete("/api/users/:username", adminMiddleware, async (req, res) => {
+  try {
+    const result = await deleteUser(req.params.username);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, message: "Loi xoa user" });
+  }
 });
 
 const PORT = process.env.PORT || 3000;

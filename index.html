@@ -15,6 +15,7 @@
     <span>HỆ THỐNG ĐIỀU KHIỂN RELAY</span>
     <div class="header-right">
       <span class="user-info" id="userInfo">👤</span>
+      <button class="admin-btn" id="btnAdmin" style="display:none">👥 Quản lý</button>
       <button class="logout-btn" id="btnLogout">Đăng xuất</button>
     </div>
   </div>
@@ -63,6 +64,8 @@
 
 <script>
   const u = localStorage.getItem("username");
+  const r = localStorage.getItem("role");
+  if (r === "admin") { document.getElementById("btnAdmin").style.display = "inline-block"; document.getElementById("btnAdmin").addEventListener("click", () => window.location.href = "/admin"); }
   if (u) document.getElementById("userInfo").textContent = "👤 " + u;
 </script>
 <script src="/script.js"></script>
