@@ -1,9 +1,8 @@
 const SERVER_URL = "https://relay-server-p7mj.onrender.com";
 
 // ===== CHECK LOGIN =====
-const token = localStorage.getItem("token");
-if (!token) {
-    window.location.href = "/login";
+if (!localStorage.getItem("token")) {
+    window.location.replace("/login.html");
 }
 
 // ===== ELEMENT =====
@@ -43,6 +42,12 @@ async function checkConnection() {
     }
 }
 
+// ===== LOGOUT =====
+function logout() {
+    localStorage.clear();
+    window.location.replace("/login.html"); // 🔥 fix chuẩn
+}
+
 checkConnection();
 setInterval(checkConnection, 15000);
 
@@ -68,7 +73,7 @@ buttons.forEach(btn => {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "x-token": token
+                        "x-token": localStorage.getItem("token") // 🔥 luôn lấy mới
                     },
                     body: JSON.stringify({ relay: id, state })
                 });
@@ -77,8 +82,7 @@ buttons.forEach(btn => {
 
                 if (!data.ok) {
                     alert("Hết phiên đăng nhập!");
-                    localStorage.clear();
-                    window.location.href = "/login.html";
+                    logout();
                     return;
                 }
 
