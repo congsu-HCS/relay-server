@@ -3,13 +3,14 @@ const express    = require("express");
 const http       = require("http");
 const WebSocket  = require("ws");
 const crypto     = require("crypto");
-const { findUser } = require("./models/user");
+const { findUser } = require("./user");
 
 const app        = express();
 const httpServer = http.createServer(app);
 const wss        = new WebSocket.Server({ server: httpServer });
 
 app.use(express.json());
+app.use(express.static(__dirname));
 
 // ===== TOKEN STORE =====
 const tokens = new Map();
@@ -64,7 +65,7 @@ function broadcast(data) {
 }
 
 // ===== PUBLIC ROUTES =====
-app.get("/login", (req, res) => res.sendFile(__dirname + "/public/login.html"));
+app.get("/login", (req, res) => res.sendFile(__dirname + "/login.html"));
 
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
@@ -79,9 +80,7 @@ app.get("/ping", (req, res) => res.json({ ok: true }));
 // ===== PROTECTED ROUTES =====
 app.get("/", (req, res) => res.redirect("/login"));
 
-app.get("/app", (req, res) => res.sendFile(__dirname + "/public/index.html"));
-
-app.use("/public", express.static(__dirname + "/public"));
+app.get("/app", (req, res) => res.sendFile(__dirname + "/index.html"));
 
 app.post("/relay", authMiddleware, (req, res) => {
   const { relay, state } = req.body;
