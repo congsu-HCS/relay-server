@@ -226,8 +226,22 @@ async function deleteUser(username) {
     headers: { "x-token": token }
   });
   const data = await res.json();
-  if (data.ok) { showMsg("✅ Đã xóa: " + username, "ok"); loadUsers(); }
-  else         { showMsg("❌ " + data.message, "error"); }
+  if (data.ok) {
+    showMsg("✅ Đã xóa: " + username, "ok");
+    // Xóa trực tiếp khỏi DOM — không fetch lại để tránh JSONBin trả cache cũ
+    const items = document.querySelectorAll(".user-item");
+    items.forEach(item => {
+      if (item.querySelector(".user-name").textContent.trim() === "👤 " + username) {
+        item.remove();
+      }
+    });
+    const list = document.getElementById("userList");
+    if (list.querySelectorAll(".user-item").length === 0) {
+      list.innerHTML = '<div class="empty">Chưa có user nào</div>';
+    }
+  } else {
+    showMsg("❌ " + data.message, "error");
+  }
 }
 
 loadUsers();
