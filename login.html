@@ -1,108 +1,120 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Đăng nhập</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #2c3e50, #3498db);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-.card {
-  background: white;
-  padding: 40px 35px;
-  border-radius: 16px;
-  width: 360px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-}
-h2 { text-align: center; color: #2c3e50; margin-bottom: 8px; font-size: 22px; }
-.subtitle { text-align: center; color: #7f8c8d; font-size: 13px; margin-bottom: 28px; }
-label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: bold; }
-input {
-  width: 100%; padding: 11px 14px; border: 1.5px solid #ddd;
-  border-radius: 8px; font-size: 15px; margin-bottom: 18px;
-  outline: none; transition: border 0.2s;
-}
-input:focus { border-color: #3498db; }
-button {
-  width: 100%; padding: 13px; background: #2c3e50; color: white;
-  border: none; border-radius: 8px; font-size: 16px; font-weight: bold;
-  cursor: pointer; transition: background 0.2s;
-}
-button:hover { background: #3498db; }
-.error {
-  background: #fde8e8; color: #e74c3c; padding: 10px 14px;
-  border-radius: 8px; font-size: 13px; margin-bottom: 15px;
-  display: none; text-align: center;
-}
-.loading { opacity: 0.6; pointer-events: none; }
-</style>
-</head>
-<body>
-<div class="card">
-  <h2>🔐 Đăng nhập</h2>
-  <p class="subtitle">Hệ thống điều khiển Relay</p>
-  <div class="error" id="errMsg"></div>
-  <label>Tên tài khoản</label>
-  <input type="text" id="username" placeholder="Nhập tài khoản" autofocus>
-  <label>Mật khẩu</label>
-  <input type="password" id="password" placeholder="Nhập mật khẩu">
-  <button id="btnLogin">Đăng nhập</button>
-</div>
+// ===== server.js =====
+const express    = require("express");
+const http       = require("http");
+const WebSocket  = require("ws");
+const crypto     = require("crypto");
+const { findUser, getSubUsers, addUser, deleteUser } = require("./user");
 
-<script>
-async function doLogin() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const errMsg   = document.getElementById("errMsg");
-  const btn      = document.getElementById("btnLogin");
+const app        = express();
+const httpServer = http.createServer(app);
+const wss        = new WebSocket.Server({ server: httpServer });
 
-  if (!username || !password) {
-    errMsg.textContent = "Vui lòng nhập đầy đủ thông tin!";
-    errMsg.style.display = "block";
-    return;
+app.use(express.json());
+app.use(express.static(__dirname, { index: false }));
+
+// ===== TOKEN STORE =====
+const tokens = new Map();
+
+function generateToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function createToken(user) {
+  const token = generateToken();
+  tokens.set(token, {
+    username: user.username,
+    role:     user.role,
+    expires:  Date.now() + 24 * 60 * 60 * 1000
+  });
+  return token;
+}
+
+function verifyToken(token) {
+  if (!token) return null;
+  const data = tokens.get(token);
+  if (!data) return null;
+  if (Date.now() > data.expires) {
+    tokens.delete(token);
+    return null;
+  }
+  return data;
+}
+
+// ===== MIDDLEWARE =====
+function authMiddleware(req, res, next) {
+  const user = verifyToken(req.headers["x-token"]);
+  if (!user) return res.status(401).json({ ok: false, message: "Chua dang nhap" });
+  req.user = user;
+  next();
+}
+
+function adminMiddleware(req, res, next) {
+  const user = verifyToken(req.headers["x-token"]);
+  if (!user) return res.status(401).json({ ok: false, message: "Chua dang nhap" });
+  if (user.role !== "admin") return res.status(403).json({ ok: false, message: "Khong co quyen" });
+  req.user = user;
+  next();
+}
+
+// ===== RELAY =====
+let relayState = {};
+
+wss.on("connection", (ws) => {
+  ws.send(JSON.stringify({ type: "init", state: relayState }));
+});
+
+function broadcast(data) {
+  const msg = JSON.stringify(data);
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(msg);
+  });
+}
+
+// ===== ROUTES =====
+app.get("/", (req, res) => res.redirect("/login"));
+app.get("/login", (req, res) => res.sendFile(__dirname + "/login.html"));
+app.get("/app",   (req, res) => res.sendFile(__dirname + "/index.html"));
+app.get("/admin", (req, res) => res.sendFile(__dirname + "/admin.html"));
+app.get("/ping",  (req, res) => res.json({ ok: true }));
+
+// ===== LOGIN =====
+app.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
+  const user = await findUser(username, password);
+
+  if (!user) {
+    return res.status(401).json({ ok: false, message: "Sai tai khoan" });
   }
 
-  btn.textContent = "Đang đăng nhập...";
-  btn.classList.add("loading");
+  const token = createToken(user);
+  res.json({ ok: true, token, username: user.username, role: user.role });
+});
 
-  try {
-        const SERVER_URL = "https://relay-server-p7mj.onrender.com";
+// ===== RELAY =====
+app.post("/relay", authMiddleware, (req, res) => {
+  const { relay, state } = req.body;
+  relayState[relay] = state;
 
-        const res = await fetch(SERVER_URL + "/api/login", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ username, password })
-        });
-    const data = await res.json();
+  broadcast({ type: "relay", relay, state });
 
-    if (data.ok) {
-      localStorage.setItem("token",    data.token);
-      localStorage.setItem("username", data.username);
-      localStorage.setItem("role",     data.role);
-      window.location.href = SERVER_URL + "/app";
-    } else {
-      errMsg.textContent = data.message || "Sai thông tin đăng nhập!";
-      errMsg.style.display = "block";
-      btn.textContent = "Đăng nhập";
-      btn.classList.remove("loading");
-    }
-  } catch (e) {
-    errMsg.textContent = "Không kết nối được server!";
-    errMsg.style.display = "block";
-    btn.textContent = "Đăng nhập";
-    btn.classList.remove("loading");
-  }
-}
+  res.json({ ok: true });
+});
 
-document.getElementById("btnLogin").addEventListener("click", doLogin);
-document.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
-</script>
-</body>
-</html>
+// ===== ADMIN =====
+app.get("/api/users", adminMiddleware, async (req, res) => {
+  const users = await getSubUsers();
+  res.json({ ok: true, users });
+});
+
+app.post("/api/users", adminMiddleware, async (req, res) => {
+  const result = await addUser(req.body.username, req.body.password);
+  res.json(result);
+});
+
+app.delete("/api/users/:username", adminMiddleware, async (req, res) => {
+  const result = await deleteUser(req.params.username);
+  res.json(result);
+});
+
+const PORT = process.env.PORT || 3000;
+httpServer.listen(PORT, () => console.log("Server running:", PORT));
