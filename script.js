@@ -90,25 +90,23 @@ buttons.forEach(btn => {
 
             console.log("Relay:", id, state);
 
-            fetch("/relay", {
+            fetch(SERVER_URL + "/relay", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 "x-token": token
               },
-              body: JSON.stringify({ relay, state })
-            });
+              body: JSON.stringify({ relay: id, state })
+            })
             .then(res => res.json())
             .then(data => {
                 console.log("Server:", data);
-                // cập nhật trạng thái khi gửi thành công
                 setStatus("connected", "✅ Relay " + id + " → " + state);
             })
             .catch(err => {
                 console.error("Lỗi:", err);
                 setStatus("disconnected", "❌ Gửi lệnh thất bại — Relay " + id);
             });
-
             count++;
             timers[id] = setTimeout(runPulse, 500);
         }
