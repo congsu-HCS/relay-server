@@ -10,7 +10,7 @@ const httpServer = http.createServer(app);
 const wss        = new WebSocket.Server({ server: httpServer });
 
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { index: false }));
 
 // ===== TOKEN STORE =====
 const tokens = new Map();
