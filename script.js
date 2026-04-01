@@ -3,7 +3,7 @@ const SERVER_URL = "https://relay-server-p7mj.onrender.com";
 // ===== CHECK LOGIN =====
 const token = localStorage.getItem("token");
 if (!token) {
-    window.location.href = "/login.html";
+    window.location.href = "/login";
 }
 
 // ===== ELEMENT =====
@@ -78,7 +78,7 @@ buttons.forEach(btn => {
                 if (!data.ok) {
                     alert("Hết phiên đăng nhập!");
                     localStorage.clear();
-                    window.location.href = "/login";
+                    window.location.href = "/login.html";
                     return;
                 }
 
