@@ -61,13 +61,38 @@
   </div>
 
 </div>
-
 <script>
+  const token = new URLSearchParams(window.location.search).get("token");
+
   const u = localStorage.getItem("username");
   const r = localStorage.getItem("role");
-  if (r === "admin") { document.getElementById("btnAdmin").style.display = "inline-block"; document.getElementById("btnAdmin").addEventListener("click", () => window.location.href = "/admin"); }
-  if (u) document.getElementById("userInfo").textContent = "👤 " + u;
+
+  // Hiển thị user
+  if (u) {
+    document.getElementById("userInfo").textContent = "👤 " + u;
+  }
+
+  // Nút ADMIN
+  if (r === "admin") {
+    const btnAdmin = document.getElementById("btnAdmin");
+    btnAdmin.style.display = "inline-block";
+
+    btnAdmin.addEventListener("click", () => {
+      window.location.href = "/admin?token=" + token;
+    });
+  }
+
+  // Nút LOGOUT
+  document.getElementById("btnLogout").addEventListener("click", () => {
+    fetch("/api/logout?token=" + token, {
+      method: "POST"
+    }).then(() => {
+      localStorage.clear();
+      window.location.href = "/login";
+    });
+  });
 </script>
+
 <script src="/script.js"></script>
 </body>
 </html>
