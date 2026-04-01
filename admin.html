@@ -130,7 +130,7 @@ h3 { color: #2c3e50; margin-bottom: 15px; font-size: 15px; }
 <div class="container">
   <div class="header">
     👥 Quản lý User
-    <button class="back-btn" onclick="window.location.href='/app'">← Điều khiển</button>
+    <button class="back-btn" onclick="goBack()">← Điều khiển</button>
   </div>
   <div class="panel">
 
@@ -153,7 +153,7 @@ h3 { color: #2c3e50; margin-bottom: 15px; font-size: 15px; }
 </div>
 
 <script>
-const token = localStorage.getItem("token");
+const token = new URLSearchParams(window.location.search).get("token");
 const role  = localStorage.getItem("role");
 
 // Chỉ admin mới vào được
@@ -214,7 +214,9 @@ async function addUser() {
     showMsg("❌ " + data.message, "error");
   }
 }
-
+function goBack() {
+  window.location.href = "/app?token=" + token;
+}
 async function deleteUser(username) {
   if (!confirm("Xóa user: " + username + "?")) return;
   const res  = await fetch("/api/users/" + username, {
