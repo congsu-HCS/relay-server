@@ -126,7 +126,7 @@ async function doLogin() {
     if (data.ok) {
       localStorage.setItem("token",    data.token);
       localStorage.setItem("username", data.username);
-      window.location.href = "/?token=" + data.token;
+      window.location.href = "/app";
     } else {
       errMsg.textContent = data.message || "Sai thông tin đăng nhập!";
       errMsg.style.display = "block";
