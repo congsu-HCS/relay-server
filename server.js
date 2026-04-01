@@ -77,7 +77,12 @@ app.post("/api/login", (req, res) => {
 app.get("/ping", (req, res) => res.json({ ok: true }));
 
 // ===== PROTECTED ROUTES =====
-app.get("/", authMiddleware, (req, res) => res.sendFile(__dirname + "/public/index.html"));
+app.get("/", (req, res) => {
+  const token = req.headers["x-token"] || req.query.token;
+  const user  = verifyToken(token);
+  if (!user) return res.redirect("/login"); // chưa đăng nhập → về login
+  res.sendFile(__dirname + "/public/index.html");
+});
 
 app.use("/public", express.static(__dirname + "/public"));
 
