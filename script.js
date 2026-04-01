@@ -1,4 +1,5 @@
 const SERVER_URL = "https://relay-server-p7mj.onrender.com";
+const token = new URLSearchParams(window.location.search).get("token");
 
 const buttons = document.querySelectorAll(".btn");
 const statusBar  = document.getElementById("statusBar");
@@ -89,7 +90,7 @@ buttons.forEach(btn => {
 
             console.log("Relay:", id, state);
 
-            fetch(SERVER_URL + "/relay", {
+            fetch("/relay?token=" + token, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ relay: id, state: state })
