@@ -1,71 +1,100 @@
 // server.js
-const express = require("express");
-const http    = require("http");
-const WebSocket = require("ws");
+const express    = require("express");
+const http       = require("http");
+const WebSocket  = require("ws");
+const crypto     = require("crypto");
+const { findUser } = require("./models/user");
 
 const app        = express();
 const httpServer = http.createServer(app);
 const wss        = new WebSocket.Server({ server: httpServer });
 
 app.use(express.json());
-app.use(express.static(__dirname));
 
-let relayState = {};
+// ===== TOKEN STORE =====
+const tokens = new Map();
 
-// ===== WebSocket =====
-wss.on("connection", (ws) => {
-    console.log("ESP32 đã kết nối WebSocket");
-
-    // gửi trạng thái hiện tại ngay khi ESP32 kết nối
-    ws.send(JSON.stringify({ type: "init", state: relayState }));
-
-    ws.on("close", () => console.log("ESP32 ngắt kết nối"));
-    ws.on("error", (err) => console.log("WS error:", err.message));
-});
-
-// broadcast tới tất cả ESP32 đang kết nối
-function broadcast(data) {
-    const msg = JSON.stringify(data);
-    wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(msg);
-        }
-    });
+function generateToken() {
+  return crypto.randomBytes(32).toString("hex");
 }
 
-// ===== REST API =====
+function createToken(user) {
+  const token = generateToken();
+  tokens.set(token, {
+    username: user.username,
+    role:     user.role,
+    expires:  Date.now() + 24 * 60 * 60 * 1000
+  });
+  return token;
+}
 
-// Web gửi lệnh relay
-app.post("/relay", (req, res) => {
-    const { relay, state } = req.body;
-    relayState[relay] = state;
-    console.log("Relay", relay, "->", state);
+function verifyToken(token) {
+  if (!token) return null;
+  const data = tokens.get(token);
+  if (!data) return null;
+  if (Date.now() > data.expires) { tokens.delete(token); return null; }
+  return data;
+}
 
-    // đẩy lệnh ngay lập tức tới ESP32 qua WebSocket
-    broadcast({ type: "relay", relay, state });
+// ===== MIDDLEWARE =====
+function authMiddleware(req, res, next) {
+  const token = req.headers["x-token"] || req.query.token;
+  const user  = verifyToken(token);
+  if (!user) return res.status(401).json({ ok: false, message: "Chua dang nhap" });
+  req.user = user;
+  next();
+}
 
-    res.send({ ok: true });
+// ===== RELAY STATE =====
+let relayState = {};
+
+// ===== WEBSOCKET =====
+wss.on("connection", (ws) => {
+  console.log("ESP32 ket noi WebSocket");
+  ws.send(JSON.stringify({ type: "init", state: relayState }));
+  ws.on("close", () => console.log("ESP32 ngat ket noi"));
+  ws.on("error", (err) => console.log("WS error:", err.message));
 });
 
-// Lấy trạng thái 1 relay
-app.get("/relay/:id", (req, res) => {
-    res.send({ state: relayState[req.params.id] || "OFF" });
+function broadcast(data) {
+  const msg = JSON.stringify(data);
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) client.send(msg);
+  });
+}
+
+// ===== PUBLIC ROUTES =====
+app.get("/login", (req, res) => res.sendFile(__dirname + "/public/login.html"));
+
+app.post("/api/login", (req, res) => {
+  const { username, password } = req.body;
+  const user = findUser(username, password);
+  if (!user) return res.status(401).json({ ok: false, message: "Sai tai khoan hoac mat khau" });
+  const token = createToken(user);
+  res.json({ ok: true, token, username: user.username, role: user.role });
 });
 
-// Lấy toàn bộ trạng thái
-app.get("/relays", (req, res) => {
-    res.send(relayState);
+app.get("/ping", (req, res) => res.json({ ok: true }));
+
+// ===== PROTECTED ROUTES =====
+app.get("/", authMiddleware, (req, res) => res.sendFile(__dirname + "/public/index.html"));
+
+app.use("/public", express.static(__dirname + "/public"));
+
+app.post("/relay", authMiddleware, (req, res) => {
+  const { relay, state } = req.body;
+  relayState[relay] = state;
+  console.log("[" + req.user.username + "] Relay " + relay + " -> " + state);
+  broadcast({ type: "relay", relay, state });
+  res.json({ ok: true });
 });
 
-// Số ESP32 đang kết nối
-app.get("/status", (req, res) => {
-    res.send({ esp32_connected: wss.clients.size, relayState });
-});
+app.get("/relays", authMiddleware, (req, res) => res.json(relayState));
 
-// Ping
-app.get("/ping", (req, res) => {
-    res.send({ ok: true });
+app.post("/api/logout", authMiddleware, (req, res) => {
+  tokens.delete(req.headers["x-token"]);
+  res.json({ ok: true });
 });
 
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => console.log("Server chạy trên port:", PORT));
+httpServer.listen(PORT, () => console.log("Server chay tren port:", PORT));
