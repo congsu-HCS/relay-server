@@ -1,114 +1,95 @@
 const SERVER_URL = "https://relay-server-p7mj.onrender.com";
 
+// ===== CHECK LOGIN =====
+const token = localStorage.getItem("token");
+if (!token) {
+    window.location.href = "/login";
+}
+
+// ===== ELEMENT =====
 const buttons = document.querySelectorAll(".btn");
 const statusBar  = document.getElementById("statusBar");
-const statusDot  = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
 const statusTime = document.getElementById("statusTime");
 
 let isRunning = false;
-let timers = {};
 
-// =============================================
-// 🔌 KIỂM TRA KẾT NỐI SERVER
-// =============================================
+// ===== STATUS =====
 function setStatus(type, message) {
     statusBar.className  = "status-bar " + type;
     statusText.textContent = message;
 
     const now = new Date();
-    const h = String(now.getHours()).padStart(2,"0");
-    const m = String(now.getMinutes()).padStart(2,"0");
-    const s = String(now.getSeconds()).padStart(2,"0");
-    statusTime.textContent = "Cập nhật lúc " + h + ":" + m + ":" + s;
+    statusTime.textContent =
+        "Cập nhật lúc " +
+        now.getHours().toString().padStart(2,"0") + ":" +
+        now.getMinutes().toString().padStart(2,"0") + ":" +
+        now.getSeconds().toString().padStart(2,"0");
 }
 
+// ===== CHECK SERVER =====
 async function checkConnection() {
-    setStatus("checking", "Đang kiểm tra kết nối server...");
+    setStatus("checking", "Đang kiểm tra server...");
     try {
-        const res = await fetch(SERVER_URL + "/ping", { signal: AbortSignal.timeout(5000) });
+        const res = await fetch(SERVER_URL + "/ping");
         const data = await res.json();
         if (data.ok) {
-            setStatus("connected", "✅ Server đang hoạt động — Sẵn sàng điều khiển");
+            setStatus("connected", "✅ Server OK");
         } else {
-            setStatus("disconnected", "⚠️ Server phản hồi lỗi");
+            setStatus("disconnected", "⚠️ Server lỗi");
         }
-    } catch (err) {
-        setStatus("disconnected", "❌ Mất kết nối server — Kiểm tra mạng hoặc chờ server khởi động");
+    } catch {
+        setStatus("disconnected", "❌ Mất kết nối");
     }
 }
 
-// Kiểm tra ngay khi load, sau đó mỗi 15 giây
 checkConnection();
 setInterval(checkConnection, 15000);
 
-// =============================================
-// 🔒 KHÓA / MỞ GIAO DIỆN
-// =============================================
-function lockAll(exceptBtn) {
-    buttons.forEach(b => {
-        if (b !== exceptBtn) b.classList.add("disabled");
-    });
-}
-
-function unlockAll() {
-    buttons.forEach(b => b.classList.remove("disabled"));
-}
-
-// =============================================
-// 🎛️ XỬ LÝ NÚT RELAY
-// =============================================
+// ===== RELAY =====
 buttons.forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
         if (isRunning) return;
 
-        const parent = btn.parentElement;
-        const input = parent.querySelector(".count");
+        const id = btn.dataset.id;
+        const input = btn.parentElement.querySelector(".count");
 
         let times = parseInt(input.value) || 1;
-        if (times > 100) times = 100;
-        if (times < 1)   times = 1;
-
-        const id = btn.dataset.id;
+        times = Math.max(1, Math.min(100, times));
 
         isRunning = true;
-        lockAll(btn);
 
-        let count = 0;
-
-        function runPulse() {
-            if (count >= times * 2) {
-                timers[id] = null;
-                isRunning = false;
-                unlockAll();
-                return;
-            }
-
+        for (let i = 0; i < times * 2; i++) {
             btn.classList.toggle("active");
             const state = btn.classList.contains("active") ? "ON" : "OFF";
 
-            console.log("Relay:", id, state);
+            try {
+                const res = await fetch(SERVER_URL + "/relay", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-token": token
+                    },
+                    body: JSON.stringify({ relay: id, state })
+                });
 
-            fetch(SERVER_URL + "/relay", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ relay: id, state: state })
-            })
-            .then(res => res.json())
-            .then(data => {
-                console.log("Server:", data);
-                // cập nhật trạng thái khi gửi thành công
-                setStatus("connected", "✅ Relay " + id + " → " + state);
-            })
-            .catch(err => {
-                console.error("Lỗi:", err);
-                setStatus("disconnected", "❌ Gửi lệnh thất bại — Relay " + id);
-            });
+                const data = await res.json();
 
-            count++;
-            timers[id] = setTimeout(runPulse, 500);
+                if (!data.ok) {
+                    alert("Hết phiên đăng nhập!");
+                    localStorage.clear();
+                    window.location.href = "/login";
+                    return;
+                }
+
+                setStatus("connected", `Relay ${id} → ${state}`);
+            } catch {
+                setStatus("disconnected", "Lỗi gửi lệnh");
+            }
+
+            await new Promise(r => setTimeout(r, 500));
         }
 
-        runPulse();
+        isRunning = false;
     });
 });

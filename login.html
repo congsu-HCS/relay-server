@@ -73,18 +73,20 @@ async function doLogin() {
   btn.classList.add("loading");
 
   try {
-    const res  = await fetch("/api/login", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ username, password })
-    });
+        const SERVER_URL = "https://relay-server-p7mj.onrender.com";
+
+        const res = await fetch(SERVER_URL + "/api/login", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ username, password })
+        });
     const data = await res.json();
 
     if (data.ok) {
       localStorage.setItem("token",    data.token);
       localStorage.setItem("username", data.username);
       localStorage.setItem("role",     data.role);
-      window.location.href = "/app";
+      window.location.href = SERVER_URL + "/app";
     } else {
       errMsg.textContent = data.message || "Sai thông tin đăng nhập!";
       errMsg.style.display = "block";
