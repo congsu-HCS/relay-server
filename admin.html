@@ -157,7 +157,7 @@ const token = new URLSearchParams(window.location.search).get("token");
 const role  = localStorage.getItem("role");
 
 // Chỉ admin mới vào được
-if (!token || role !== "admin") {
+if (!token) {
   window.location.href = "/login";
 }
 
