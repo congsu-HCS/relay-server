@@ -1,5 +1,5 @@
 const SERVER_URL = "https://relay-server-p7mj.onrender.com";
-const token = new URLSearchParams(window.location.search).get("token");
+// token đã được khai báo trong index.html — không khai báo lại ở đây
 
 const buttons = document.querySelectorAll(".btn");
 const statusBar  = document.getElementById("statusBar");
