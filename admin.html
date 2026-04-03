@@ -2,164 +2,280 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Quản lý User</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #cfd9df, #e2ebf0);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 30px 15px;
-}
-.container { width: 500px; }
+  :root {
+    --bg:      #0d1117;
+    --surface: #161b22;
+    --border:  #30363d;
+    --accent:  #f0883e;
+    --green:   #3fb950;
+    --red:     #f85149;
+    --blue:    #58a6ff;
+    --text:    #e6edf3;
+    --muted:   #8b949e;
+    --radius:  10px;
+  }
 
-.header {
-  background: #2c3e50;
-  color: white;
-  padding: 14px 20px;
-  border-radius: 15px 15px 0 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 17px;
-  font-weight: bold;
-}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-.back-btn {
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
-}
-.back-btn:hover { background: #2980b9; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-.panel {
-  background: white;
-  padding: 25px;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
+  /* ── HEADER ── */
+  .header {
+    width: 100%;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 8px;
+  }
 
-h3 { color: #2c3e50; margin-bottom: 15px; font-size: 15px; }
+  .header-title {
+    font-size: clamp(11px, 2.5vw, 14px);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-/* Form thêm user */
-.add-form {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 25px;
-}
-.add-form input {
-  flex: 1;
-  padding: 9px 12px;
-  border: 1.5px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-}
-.add-form input:focus { border-color: #3498db; }
-.add-form button {
-  background: #27ae60;
-  color: white;
-  border: none;
-  padding: 9px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.add-form button:hover { background: #219a52; }
+  .back-btn {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--accent);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: rgba(240,136,62,.1); }
 
-/* Danh sách user */
-.user-list { display: flex; flex-direction: column; gap: 10px; }
+  /* ── CONTAINER ── */
+  .container {
+    width: 100%;
+    max-width: 600px;
+    padding: 16px 12px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 
-.user-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 15px;
-  background: #f8f9fa;
-  border-radius: 10px;
-  border: 1px solid #eee;
-}
+  /* ── PANEL ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
 
-.user-name { font-weight: bold; color: #2c3e50; }
-.user-role {
-  font-size: 12px;
-  padding: 3px 8px;
-  border-radius: 20px;
-  background: #3498db;
-  color: white;
-  margin-left: 8px;
-}
-.user-role.admin { background: #e74c3c; }
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
 
-.del-btn {
-  background: #e74c3c;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
-}
-.del-btn:hover { background: #c0392b; }
+  /* ── TOAST ── */
+  .msg {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: 9px 12px;
+    border-radius: 7px;
+    margin-bottom: 12px;
+    display: none;
+    border: 1px solid transparent;
+  }
+  .msg.ok    { display: block; background: rgba(63,185,80,.1);  border-color: var(--green); color: var(--green); }
+  .msg.error { display: block; background: rgba(248,81,73,.1);  border-color: var(--red);   color: var(--red); }
 
-.msg {
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin-bottom: 15px;
-  display: none;
-  text-align: center;
-}
-.msg.ok    { background: #d4edda; color: #27ae60; display: block; }
-.msg.error { background: #fde8e8; color: #e74c3c; display: block; }
+  /* ── ADD FORM ── */
+  .add-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
 
-.empty { color: #999; text-align: center; padding: 20px; font-size: 14px; }
+  .add-form input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 9px 11px;
+    outline: none;
+    transition: border-color .15s;
+    min-width: 0;
+  }
+  .add-form input::placeholder { color: var(--muted); }
+  .add-form input:focus { border-color: var(--accent); }
+
+  .add-btn {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 9px 16px;
+    border-radius: 7px;
+    border: 1px solid var(--green);
+    background: rgba(63,185,80,.1);
+    color: var(--green);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+    touch-action: manipulation;
+  }
+  .add-btn:hover  { background: rgba(63,185,80,.2); }
+  .add-btn:active { transform: scale(.97); }
+
+  /* ── USER LIST ── */
+  .user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .user-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    gap: 10px;
+    transition: border-color .15s;
+  }
+  .user-item:hover { border-color: #484f58; }
+
+  .user-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+  .user-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-role {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .user-role.admin { background: rgba(248,81,73,.15);  color: var(--red);  border: 1px solid rgba(248,81,73,.3); }
+  .user-role.user  { background: rgba(88,166,255,.15); color: var(--blue); border: 1px solid rgba(88,166,255,.3); }
+
+  .del-btn {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 5px 11px;
+    border-radius: 6px;
+    border: 1px solid rgba(248,81,73,.4);
+    background: rgba(248,81,73,.08);
+    color: var(--red);
+    cursor: pointer;
+    transition: all .15s;
+    flex-shrink: 0;
+    touch-action: manipulation;
+  }
+  .del-btn:hover  { background: rgba(248,81,73,.18); border-color: var(--red); }
+  .del-btn:active { transform: scale(.96); }
+
+  .no-del {
+    font-size: 11px;
+    color: var(--border);
+    flex-shrink: 0;
+  }
+
+  .empty {
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 24px 0;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 420px) {
+    .add-form {
+      grid-template-columns: 1fr 1fr;
+    }
+    .add-btn {
+      grid-column: 1 / -1;
+    }
+  }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    👥 Quản lý User
-    <button class="back-btn" onclick="goBack()">← Điều khiển</button>
-  </div>
-  <div class="panel">
+<div class="header">
+  <span class="header-title">👥 Quản lý User</span>
+  <button class="back-btn" onclick="goBack()">← Điều khiển</button>
+</div>
 
-    <!-- Thêm user -->
-    <h3>➕ Thêm user mới</h3>
+<div class="container">
+
+  <!-- THÊM USER -->
+  <div class="panel">
+    <div class="panel-label">Thêm user mới</div>
     <div class="msg" id="msg"></div>
     <div class="add-form">
-      <input type="text"     id="newUser" placeholder="Tên đăng nhập">
+      <input type="text"     id="newUser" placeholder="Tên đăng nhập" autocomplete="off">
       <input type="password" id="newPass" placeholder="Mật khẩu">
-      <button onclick="addUser()">Thêm</button>
+      <button class="add-btn" onclick="addUser()">+ Thêm</button>
     </div>
+  </div>
 
-    <!-- Danh sách -->
-    <h3>📋 Danh sách user</h3>
+  <!-- DANH SÁCH -->
+  <div class="panel">
+    <div class="panel-label">Danh sách user</div>
     <div class="user-list" id="userList">
       <div class="empty">Đang tải...</div>
     </div>
-
   </div>
+
 </div>
 
 <script>
 const token = new URLSearchParams(window.location.search).get("token");
-const role  = localStorage.getItem("role");
-
-// Chỉ admin mới vào được
-if (!token) {
-  window.location.href = "/login";
-}
+if (!token) window.location.href = "/login";
 
 function showMsg(text, type) {
   const el = document.getElementById("msg");
@@ -178,18 +294,16 @@ async function loadUsers() {
     return;
   }
 
-  // Thêm admin vào đầu (cố định)
   const allUsers = [{ username: "admin", role: "admin" }, ...data.users];
-
   list.innerHTML = allUsers.map(u => `
     <div class="user-item">
-      <div>
+      <div class="user-info">
         <span class="user-name">👤 ${u.username}</span>
         <span class="user-role ${u.role}">${u.role}</span>
       </div>
       ${u.role !== "admin"
         ? `<button class="del-btn" onclick="deleteUser('${u.username}')">Xóa</button>`
-        : `<span style="font-size:12px;color:#999;">Không thể xóa</span>`
+        : `<span class="no-del">Không thể xóa</span>`
       }
     </div>
   `).join("");
@@ -216,9 +330,11 @@ async function addUser() {
     showMsg("❌ " + data.message, "error");
   }
 }
+
 function goBack() {
   window.location.href = "/app?token=" + token;
 }
+
 async function deleteUser(username) {
   if (!confirm("Xóa user: " + username + "?")) return;
   const res  = await fetch("/api/users/" + username, {
@@ -228,17 +344,14 @@ async function deleteUser(username) {
   const data = await res.json();
   if (data.ok) {
     showMsg("✅ Đã xóa: " + username, "ok");
-    // Xóa trực tiếp khỏi DOM — không fetch lại để tránh JSONBin trả cache cũ
     const items = document.querySelectorAll(".user-item");
     items.forEach(item => {
-      if (item.querySelector(".user-name").textContent.trim() === "👤 " + username) {
+      if (item.querySelector(".user-name").textContent.trim() === "👤 " + username)
         item.remove();
-      }
     });
     const list = document.getElementById("userList");
-    if (list.querySelectorAll(".user-item").length === 0) {
+    if (list.querySelectorAll(".user-item").length === 0)
       list.innerHTML = '<div class="empty">Chưa có user nào</div>';
-    }
   } else {
     showMsg("❌ " + data.message, "error");
   }
