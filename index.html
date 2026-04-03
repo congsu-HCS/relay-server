@@ -2,29 +2,284 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Điều khiển Relay</title>
-<link rel="stylesheet" href="/style.css">
-</head>
+<style>
+  /* ── TOKENS ── */
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --border:    #30363d;
+    --accent:    #f0883e;
+    --accent2:   #ff6b35;
+    --green:     #3fb950;
+    --red:       #f85149;
+    --text:      #e6edf3;
+    --muted:     #8b949e;
+    --btn-off:   #21262d;
+    --btn-on:    #1f3a1f;
+    --radius:    10px;
+    --gap:       10px;
+  }
 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    width: 100%;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 8px;
+  }
+
+  .header-title {
+    font-size: clamp(11px, 2.5vw, 14px);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .user-info {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .header-btn {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+
+  .admin-btn {
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .admin-btn:hover { background: rgba(240,136,62,.1); }
+
+  .logout-btn {
+    background: transparent;
+    color: var(--red);
+    border-color: var(--red);
+  }
+  .logout-btn:hover { background: rgba(248,81,73,.1); }
+
+  /* ── MAIN WRAPPER ── */
+  .container {
+    width: 100%;
+    max-width: 900px;
+    padding: 16px 12px 80px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+
+  /* ── RELAY GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: clamp(4px, 1.5vw, 10px);
+  }
+
+  .spacer { /* invisible placeholder, preserves pyramid position */ }
+
+  /* ── RELAY ITEM ── */
+  .item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: clamp(10px, 3.5vw, 18px);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    background: var(--btn-off);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 36px;
+  }
+
+  .btn::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background .15s, box-shadow .15s;
+  }
+
+  .btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .btn.active {
+    background: var(--btn-on);
+    border-color: var(--green);
+    color: var(--green);
+    box-shadow: 0 0 12px rgba(63,185,80,.25);
+  }
+
+  .btn.active::after {
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+  }
+
+  .btn:active {
+    transform: scale(.96);
+  }
+
+  /* Count input */
+  .count {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: clamp(9px, 2.2vw, 12px);
+    text-align: center;
+    padding: 3px 2px;
+    outline: none;
+    transition: border-color .15s;
+    -moz-appearance: textfield;
+  }
+  .count::-webkit-inner-spin-button,
+  .count::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .count:focus { border-color: var(--accent); }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 12px;
+    z-index: 100;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    transition: background .3s;
+  }
+  .status-dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.offline { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+  .status-text { color: var(--muted); flex: 1; }
+  .status-time { color: var(--border); font-size: 11px; white-space: nowrap; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 480px) {
+    .header-title { font-size: 10px; }
+    .user-info     { display: none; }
+    .panel         { padding: 8px; }
+    .btn           { border-radius: 8px; }
+  }
+</style>
+</head>
 <body>
 
-<div class="container">
-
-  <!-- TIÊU ĐỀ -->
-  <div class="header">
-    <span>HỆ THỐNG ĐIỀU KHIỂN RELAY</span>
-    <div class="header-right">
-      <span class="user-info" id="userInfo">👤</span>
-      <button class="admin-btn" id="btnAdmin" style="display:none">👥 Quản lý</button>
-      <button class="logout-btn" id="btnLogout">Đăng xuất</button>
-    </div>
+<!-- HEADER -->
+<div class="header">
+  <span class="header-title">⚡ HỆ THỐNG ĐIỀU KHIỂN RELAY</span>
+  <div class="header-right">
+    <span class="user-info" id="userInfo">👤</span>
+    <button class="header-btn admin-btn" id="btnAdmin" style="display:none">👥 Quản lý</button>
+    <button class="header-btn logout-btn" id="btnLogout">↩ Đăng xuất</button>
   </div>
+</div>
 
-  <!-- KHUNG -->
+<div class="container">
+  <!-- PANEL -->
   <div class="panel">
+    <div class="panel-label">Bảng điều khiển relay</div>
     <div class="grid">
 
-      <!-- Hàng 1 -->
+      <!-- Hàng 1 — 6 relay -->
       <div class="item"><button class="btn" data-id="56">56</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="16">16</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="15">15</button><input class="count" type="number" value="1" min="1" max="100"></div>
@@ -32,67 +287,63 @@
       <div class="item"><button class="btn" data-id="13">13</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="12">12</button><input class="count" type="number" value="1" min="1" max="100"></div>
 
-      <!-- Hàng 2 -->
-      <div></div>
+      <!-- Hàng 2 — 1 spacer + 4 relay -->
+      <div class="spacer"></div>
       <div class="item"><button class="btn" data-id="26">26</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="25">25</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="24">24</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="23">23</button><input class="count" type="number" value="1" min="1" max="100"></div>
+      <div class="spacer"></div>
 
-      <!-- Hàng 3 -->
-      <div></div><div></div>
+      <!-- Hàng 3 — 2 spacer + 3 relay -->
+      <div class="spacer"></div>
+      <div class="spacer"></div>
       <div class="item"><button class="btn" data-id="36">36</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="35">35</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="34">34</button><input class="count" type="number" value="1" min="1" max="100"></div>
+      <div class="spacer"></div>
 
-      <!-- Hàng 4 -->
-      <div></div><div></div><div></div>
+      <!-- Hàng 4 — 3 spacer + 2 relay -->
+      <div class="spacer"></div>
+      <div class="spacer"></div>
+      <div class="spacer"></div>
       <div class="item"><button class="btn" data-id="46">46</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="45">45</button><input class="count" type="number" value="1" min="1" max="100"></div>
+      <div class="spacer"></div>
 
     </div>
   </div>
-
-  <!-- THANH TRẠNG THÁI -->
-  <div class="status-bar" id="statusBar">
-    <span class="status-dot" id="statusDot"></span>
-    <span class="status-text" id="statusText">Đang kiểm tra kết nối...</span>
-    <span class="status-time" id="statusTime"></span>
-  </div>
-
 </div>
+
+<!-- STATUS BAR -->
+<div class="status-bar" id="statusBar">
+  <span class="status-dot" id="statusDot"></span>
+  <span class="status-text" id="statusText">Đang kiểm tra kết nối...</span>
+  <span class="status-time" id="statusTime"></span>
+</div>
+
 <script>
   const token = new URLSearchParams(window.location.search).get("token");
-
   const u = localStorage.getItem("username");
   const r = localStorage.getItem("role");
 
-  // Hiển thị user
-  if (u) {
-    document.getElementById("userInfo").textContent = "👤 " + u;
-  }
+  if (u) document.getElementById("userInfo").textContent = "👤 " + u;
 
-  // Nút ADMIN
   if (r === "admin") {
     const btnAdmin = document.getElementById("btnAdmin");
     btnAdmin.style.display = "inline-block";
-
     btnAdmin.addEventListener("click", () => {
       window.location.href = "/admin?token=" + token;
     });
   }
 
-  // Nút LOGOUT
   document.getElementById("btnLogout").addEventListener("click", () => {
-    fetch("/api/logout?token=" + token, {
-      method: "POST"
-    }).then(() => {
+    fetch("/api/logout?token=" + token, { method: "POST" }).then(() => {
       localStorage.clear();
       window.location.href = "/login";
     });
   });
 </script>
-
 <script src="/script.js"></script>
 </body>
 </html>
