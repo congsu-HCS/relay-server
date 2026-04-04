@@ -5,13 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Điều khiển Relay</title>
 <style>
-  /* ── TOKENS ── */
   :root {
     --bg:        #0d1117;
     --surface:   #161b22;
     --border:    #30363d;
     --accent:    #f0883e;
-    --accent2:   #ff6b35;
     --green:     #3fb950;
     --red:       #f85149;
     --text:      #e6edf3;
@@ -19,7 +17,6 @@
     --btn-off:   #21262d;
     --btn-on:    #1f3a1f;
     --radius:    10px;
-    --gap:       10px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,7 +31,6 @@
     align-items: center;
   }
 
-  /* ── HEADER ── */
   .header {
     width: 100%;
     background: var(--surface);
@@ -68,11 +64,7 @@
     flex-shrink: 0;
   }
 
-  .user-info {
-    font-size: 12px;
-    color: var(--muted);
-    white-space: nowrap;
-  }
+  .user-info { font-size: 12px; color: var(--muted); white-space: nowrap; }
 
   .header-btn {
     font-family: inherit;
@@ -86,22 +78,11 @@
     transition: all .15s;
     white-space: nowrap;
   }
-
-  .admin-btn {
-    background: transparent;
-    color: var(--accent);
-    border-color: var(--accent);
-  }
-  .admin-btn:hover { background: rgba(240,136,62,.1); }
-
-  .logout-btn {
-    background: transparent;
-    color: var(--red);
-    border-color: var(--red);
-  }
+  .admin-btn  { background: transparent; color: var(--accent); border-color: var(--accent); }
+  .admin-btn:hover  { background: rgba(240,136,62,.1); }
+  .logout-btn { background: transparent; color: var(--red); border-color: var(--red); }
   .logout-btn:hover { background: rgba(248,81,73,.1); }
 
-  /* ── MAIN WRAPPER ── */
   .container {
     width: 100%;
     max-width: 900px;
@@ -112,7 +93,6 @@
     gap: 16px;
   }
 
-  /* ── PANEL ── */
   .panel {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -130,16 +110,14 @@
     padding-bottom: 8px;
   }
 
-  /* ── RELAY GRID ── */
   .grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: clamp(4px, 1.5vw, 10px);
   }
 
-  .spacer { /* invisible placeholder, preserves pyramid position */ }
+  .spacer { }
 
-  /* ── RELAY ITEM ── */
   .item {
     display: flex;
     flex-direction: column;
@@ -172,21 +150,15 @@
   .btn::after {
     content: '';
     position: absolute;
-    bottom: 5px;
-    left: 50%;
+    bottom: 5px; left: 50%;
     transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
+    width: 6px; height: 6px;
     border-radius: 50%;
     background: var(--border);
     transition: background .15s, box-shadow .15s;
   }
 
-  .btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    transform: translateY(-1px);
-  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
 
   .btn.active {
     background: var(--btn-on);
@@ -194,17 +166,10 @@
     color: var(--green);
     box-shadow: 0 0 12px rgba(63,185,80,.25);
   }
+  .btn.active::after { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .btn:active { transform: scale(.96); }
+  .btn.disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
 
-  .btn.active::after {
-    background: var(--green);
-    box-shadow: 0 0 6px var(--green);
-  }
-
-  .btn:active {
-    transform: scale(.96);
-  }
-
-  /* Count input */
   .count {
     width: 100%;
     background: var(--bg);
@@ -223,11 +188,39 @@
   .count::-webkit-outer-spin-button { -webkit-appearance: none; }
   .count:focus { border-color: var(--accent); }
 
-  /* ── STATUS BAR ── */
+  /* ── NÚT HỦY ── */
+  .cancel-wrap {
+    display: none;
+    justify-content: center;
+  }
+
+  #btnCancel {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 32px;
+    border-radius: 7px;
+    border: 1px solid var(--red);
+    background: rgba(248,81,73,.1);
+    color: var(--red);
+    cursor: pointer;
+    transition: background .15s;
+    touch-action: manipulation;
+    animation: pulse-red 1.2s ease-in-out infinite;
+  }
+  #btnCancel:hover  { background: rgba(248,81,73,.22); }
+  #btnCancel:active { transform: scale(.97); }
+
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0   rgba(248,81,73,.5); }
+    50%       { box-shadow: 0 0 0 7px rgba(248,81,73,.0); }
+  }
+
   .status-bar {
     position: fixed;
-    bottom: 0;
-    left: 0; right: 0;
+    bottom: 0; left: 0; right: 0;
     background: var(--surface);
     border-top: 1px solid var(--border);
     display: flex;
@@ -239,8 +232,7 @@
   }
 
   .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 8px; height: 8px;
     border-radius: 50%;
     background: var(--muted);
     flex-shrink: 0;
@@ -252,18 +244,16 @@
   .status-text { color: var(--muted); flex: 1; }
   .status-time { color: var(--border); font-size: 11px; white-space: nowrap; }
 
-  /* ── MOBILE ── */
   @media (max-width: 480px) {
     .header-title { font-size: 10px; }
-    .user-info     { display: none; }
-    .panel         { padding: 8px; }
-    .btn           { border-radius: 8px; }
+    .user-info    { display: none; }
+    .panel        { padding: 8px; }
+    .btn          { border-radius: 8px; }
   }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <span class="header-title">⚡ HỆ THỐNG ĐIỀU KHIỂN RELAY</span>
   <div class="header-right">
@@ -274,12 +264,11 @@
 </div>
 
 <div class="container">
-  <!-- PANEL -->
   <div class="panel">
     <div class="panel-label">Bảng điều khiển relay</div>
     <div class="grid">
 
-      <!-- Hàng 1 — 6 relay -->
+      <!-- Hàng 1 -->
       <div class="item"><button class="btn" data-id="56">56</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="16">16</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="15">15</button><input class="count" type="number" value="1" min="1" max="100"></div>
@@ -287,7 +276,7 @@
       <div class="item"><button class="btn" data-id="13">13</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="12">12</button><input class="count" type="number" value="1" min="1" max="100"></div>
 
-      <!-- Hàng 2 — 1 spacer + 4 relay -->
+      <!-- Hàng 2 -->
       <div class="spacer"></div>
       <div class="item"><button class="btn" data-id="26">26</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="item"><button class="btn" data-id="25">25</button><input class="count" type="number" value="1" min="1" max="100"></div>
@@ -295,7 +284,7 @@
       <div class="item"><button class="btn" data-id="23">23</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="spacer"></div>
 
-      <!-- Hàng 3 — 2 spacer + 3 relay -->
+      <!-- Hàng 3 -->
       <div class="spacer"></div>
       <div class="spacer"></div>
       <div class="item"><button class="btn" data-id="36">36</button><input class="count" type="number" value="1" min="1" max="100"></div>
@@ -303,7 +292,7 @@
       <div class="item"><button class="btn" data-id="34">34</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="spacer"></div>
 
-      <!-- Hàng 4 — 3 spacer + 2 relay -->
+      <!-- Hàng 4 -->
       <div class="spacer"></div>
       <div class="spacer"></div>
       <div class="spacer"></div>
@@ -313,9 +302,13 @@
 
     </div>
   </div>
+
+  <!-- NÚT HỦY — chỉ hiện khi đang chạy -->
+  <div class="cancel-wrap" id="cancelWrap">
+    <button id="btnCancel">⛔ Dừng ngay</button>
+  </div>
 </div>
 
-<!-- STATUS BAR -->
 <div class="status-bar" id="statusBar">
   <span class="status-dot" id="statusDot"></span>
   <span class="status-text" id="statusText">Đang kiểm tra kết nối...</span>
