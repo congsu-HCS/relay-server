@@ -123,7 +123,7 @@ buttons.forEach(btn => {
       .catch(() => setStatus("offline", "❌ Gửi lệnh thất bại — Relay " + id));
 
       count++;
-      activeTimer = setTimeout(runPulse, 500);
+      activeTimer = setTimeout(runPulse, 250);
     }
 
     runPulse();
