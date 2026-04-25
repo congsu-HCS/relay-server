@@ -352,6 +352,12 @@
     btnAdmin.addEventListener("click", () => {
       window.location.href = "/admin?token=" + token;
     });
+  } else {
+    // Ẩn relay chỉ dành cho admin
+    ["57", "58", "59"].forEach(id => {
+      const btn = document.querySelector(`.btn[data-id="${id}"]`);
+      if (btn) btn.closest(".item").style.visibility = "hidden";
+    });
   }
 
   document.getElementById("btnLogout").addEventListener("click", () => {
