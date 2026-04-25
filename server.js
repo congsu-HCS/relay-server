@@ -114,6 +114,10 @@ app.get("/admin", (req, res) => {
 
 app.post("/relay", authMiddleware, (req, res) => {
   const { relay, state } = req.body;
+  const adminOnlyRelays = ["57", "58", "59"];
+  if (adminOnlyRelays.includes(String(relay)) && req.user.role !== "admin") {
+    return res.status(403).json({ ok: false, message: "Chỉ admin mới được điều khiển relay này" });
+  }
   relayState[relay] = state;
   console.log("[" + req.user.username + "] Relay " + relay + " -> " + state);
   broadcast({ type: "relay", relay, state });
