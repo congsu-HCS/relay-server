@@ -86,6 +86,7 @@ btnCancel.addEventListener("click", cancelCycle);
 // 🎛️ XỬ LÝ NÚT RELAY
 // =============================================
 buttons.forEach(btn => {
+  if (btn.id === "btnAllOn") return; // xử lý riêng bên dưới
   btn.addEventListener("click", () => {
     if (isRunning) return;
 
@@ -129,3 +130,47 @@ buttons.forEach(btn => {
     runPulse();
   });
 });
+
+// =============================================
+// ★ ALL ON — Bật tất cả relay (chỉ admin)
+// =============================================
+const btnAllOn = document.getElementById("btnAllOn");
+if (btnAllOn) {
+  const ALL_RELAY_IDS = ["56","16","15","14","13","12","26","25","24","23","36","35","34","46","45","57","58","59"];
+
+  btnAllOn.addEventListener("click", () => {
+    if (isRunning) return;
+
+    isRunning = true;
+    activeBtn = btnAllOn;
+    lockAll(btnAllOn);
+    btnAllOn.classList.add("active");
+    setStatus("", "⚡ Đang bật tất cả relay...");
+
+    const sends = ALL_RELAY_IDS.map(id =>
+      fetch(SERVER_URL + "/relay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-token": token },
+        body: JSON.stringify({ relay: id, state: "ON" })
+      }).catch(() => {})
+    );
+
+    Promise.all(sends).then(() => {
+      // Cập nhật visual tất cả nút sang ON
+      buttons.forEach(b => {
+        if (b !== btnAllOn) b.classList.add("active");
+      });
+      btnAllOn.classList.remove("active");
+      isRunning = false;
+      activeBtn = null;
+      unlockAll();
+      setStatus("online", "✅ Tất cả relay → ON");
+    }).catch(() => {
+      btnAllOn.classList.remove("active");
+      isRunning = false;
+      activeBtn = null;
+      unlockAll();
+      setStatus("offline", "❌ Gửi lệnh thất bại");
+    });
+  });
+}

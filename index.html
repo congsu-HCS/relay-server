@@ -188,6 +188,25 @@
   .count::-webkit-outer-spin-button { -webkit-appearance: none; }
   .count:focus { border-color: var(--accent); }
 
+  /* ── NÚT ALL ON ── */
+  .btn-allon {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    animation: pulse-accent 2s ease-in-out infinite;
+  }
+  .btn-allon::after { background: var(--accent) !important; }
+  .btn-allon:hover  { background: rgba(240,136,62,.15) !important; transform: translateY(-1px); }
+  .btn-allon.active {
+    background: rgba(240,136,62,.2) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 14px rgba(240,136,62,.4) !important;
+  }
+
+  @keyframes pulse-accent {
+    0%, 100% { box-shadow: 0 0 0 0   rgba(240,136,62,.5); }
+    50%       { box-shadow: 0 0 0 6px rgba(240,136,62,.0); }
+  }
+
   /* ── NÚT HỦY ── */
   .cancel-wrap {
     display: none;
@@ -301,7 +320,7 @@
       <div class="spacer"></div>
 
       <!-- Hàng 5 -->
-      <div class="item"><button class="btn" data-id="57">57</button><input class="count" type="number" value="1" min="1" max="100"></div>
+      <div class="item"><button class="btn" data-id="57">+</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="spacer"></div>
       <div class="spacer"></div>
       <div class="spacer"></div>
@@ -309,7 +328,7 @@
       <div class="spacer"></div>
 
       <!-- Hàng 6 -->
-      <div class="item"><button class="btn" data-id="58">58</button><input class="count" type="number" value="1" min="1" max="100"></div>
+      <div class="item"><button class="btn" data-id="58">ting</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="spacer"></div>
       <div class="spacer"></div>
       <div class="spacer"></div>
@@ -317,12 +336,15 @@
       <div class="spacer"></div>
 
       <!-- Hàng 7 -->
-      <div class="item"><button class="btn" data-id="59">59</button><input class="count" type="number" value="1" min="1" max="100"></div>
+      <div class="item"><button class="btn" data-id="59">-</button><input class="count" type="number" value="1" min="1" max="100"></div>
       <div class="spacer"></div>
       <div class="spacer"></div>
       <div class="spacer"></div>
       <div class="spacer"></div>
-      <div class="spacer"></div>
+      <div class="item" id="allOnItem" style="display:none">
+        <button class="btn btn-allon" id="btnAllOn" title="Bật tất cả relay">★</button>
+        <input class="count" type="number" style="visibility:hidden" tabindex="-1">
+      </div>
 
     </div>
   </div>
@@ -352,6 +374,7 @@
     btnAdmin.addEventListener("click", () => {
       window.location.href = "/admin?token=" + token;
     });
+    document.getElementById("allOnItem").style.display = "flex"; // chỉ admin thấy nút ALL ON
   } else {
     // Ẩn relay chỉ dành cho admin
     ["57", "58", "59"].forEach(id => {
